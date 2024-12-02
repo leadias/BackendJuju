@@ -6,6 +6,8 @@ using CustomerEntity = DataAccess.Data.Customer;
 using Microsoft.AspNetCore.Http;
 using System;
 using DataAccess.Data;
+using System.Collections.Generic;
+using static Dapper.SqlMapper;
 
 namespace API.Controllers.Post
 {
@@ -26,6 +28,47 @@ namespace API.Controllers.Post
             return PostService.GetAll();
         }
 
+        //Creacion API que permita crear N cantidad de Post al mismo tiempo.
+
+        [HttpPost("postDtos")]
+
+        public IActionResult CreateDtos([FromBodyAttribute] List<PostEntity> postDtos)
+        {
+
+            try
+            {
+                if (postDtos == null || !postDtos.Any())
+                {
+                    return BadRequest("No valid posts will be provided.");
+                }
+
+
+                var posts = postDtos.Select(postDto => new PostEntity
+                {
+                    PostId = postDto.PostId,
+                    Title = postDto.Title,
+                    Body = postDto.Body,
+                    Type = postDto.Type,
+                    Category = postDto.Category,
+                    CustomerId = postDto.CustomerId
+                }).ToList();
+
+                foreach (var item in posts)
+                {
+                    PostService.Create(item);
+                }
+
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "ok", response = "Post create" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, new { mensaje = ex.Message });
+            }
+
+
+
+        }
+
         [HttpPost()]
         public IActionResult Create([FromBodyAttribute]  PostEntity entity)
         {
@@ -38,7 +81,6 @@ namespace API.Controllers.Post
                 }
                 if (!string.IsNullOrEmpty(entity.Body) && entity.Body.Length > 20)
                 {
-                    // Cortar el cuerpo a 97 caracteres y agregar "..."
                     entity.Body = entity.Body.Length > 97 ? entity.Body.Substring(0, 97) + "..." : entity.Body;
                 }
 
@@ -66,15 +108,33 @@ namespace API.Controllers.Post
         }
 
         [HttpPut()]
-        public PostEntity Update([FromBodyAttribute] PostEntity entity)
+        public IActionResult Update([FromBodyAttribute] PostEntity entity)
         {
-            return PostService.Update(entity.PostId,entity, out bool changed);
+            try
+            {
+                PostService.Update(entity.PostId, entity, out bool changed);
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "ok", response = "Post update" }); 
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, new { mensaje = ex.Message });
+            }
+
         }
 
         [HttpDelete()]
-        public PostEntity Delete([FromBodyAttribute] PostEntity entity)
+        public IActionResult Delete([FromBodyAttribute] PostEntity entity)
         {
-            return PostService.Delete(entity);
+            try
+            {
+                PostService.Delete(entity);
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "ok", response = "Post delete" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, new { mensaje = ex.Message });
+            }
+
         }
 
 

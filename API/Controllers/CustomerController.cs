@@ -67,15 +67,33 @@ namespace API.Controllers.Customer
 
         }
 
-        private CustomerEntity CreateCustomer(CustomerEntity entity)
+        private IActionResult CreateCustomer(CustomerEntity entity)
         {
-            return CustomerService.Create(entity);
+            try
+            {
+                CustomerService.Create(entity);
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "ok", response = "Customer create" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, new { mensaje = ex.Message });
+            }
+
         }
 
         [HttpPut()]
-        public CustomerEntity Update(CustomerEntity entity)
+        public IActionResult Update(CustomerEntity entity)
         {
-            return CustomerService.Update(entity.CustomerId, entity, out bool changed);
+            try
+            {
+                CustomerService.Update(entity.CustomerId, entity, out bool changed);
+                return StatusCode(StatusCodes.Status200OK, new { mensaje = "ok", response = "Customer update" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status400BadRequest, new { mensaje = ex.Message });
+            }
+             
         }
 
         [HttpDelete()]
